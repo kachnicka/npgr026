@@ -1,6 +1,6 @@
 set(Spectrum_files
     main.cpp
-)
+    SpectralData.h)
 
 add_executable(spectrum ${Spectrum_files})
 

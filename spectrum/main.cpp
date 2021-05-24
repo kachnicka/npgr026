@@ -3,6 +3,8 @@
 #include <vector>
 #include <algorithm>
 
+#include "SpectralData.h"
+
 class InputParser
 {
 public:
@@ -65,6 +67,8 @@ int main(int argc, char **argv)
         state.equidistantSampleCount = std::stoi(o);
 
     state.print();
+
+    std::cout << Data::CIE_X << '\n';
 
     return EXIT_SUCCESS;
 }
