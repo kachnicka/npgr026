@@ -4,6 +4,7 @@
 #include <algorithm>
 
 #include "SpectralData.h"
+#include "Spectrum.h"
 
 class InputParser
 {
@@ -43,14 +44,6 @@ struct AppState
     }
 };
 
-class Spectrum
-{
-    static constexpr int visibleLow = 380;
-    static constexpr int visibleHigh = 730;
-    std::array<float, visibleHigh - visibleLow> spectrum = {};
-};
-
-
 int main(int argc, char **argv)
 {
     InputParser input(argc, argv);
@@ -69,6 +62,16 @@ int main(int argc, char **argv)
     state.print();
 
     std::cout << Data::CIE_X << '\n';
+
+    Spectrum::Internal s;
+    s.print();
+
+    Spectrum::Parser p;
+    auto ss = p.parseMathematicaString(Data::CIE_Illuminant_D65);
+
+    std::cout << "{400, " << ss[400] << "}\n";
+    std::cout << "{500, " << ss[500] << "}\n";
+
 
     return EXIT_SUCCESS;
 }
