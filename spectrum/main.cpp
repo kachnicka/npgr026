@@ -58,20 +58,16 @@ int main(int argc, char **argv)
         state.randomSampleCount = std::stoi(o);
     if (auto o = input.getCmdOption("-m"); !o.empty())
         state.equidistantSampleCount = std::stoi(o);
-
     state.print();
 
-    std::cout << Data::CIE_X << '\n';
-
-    Spectrum::Internal s;
-    s.print();
-
     Spectrum::Parser p;
-    auto ss = p.parseMathematicaString(Data::CIE_Illuminant_D65);
+    auto as = p.parseMathematicaString(Data::TEST);
+    auto fvs = as.toVisibleFull();
+    fvs.print();
 
-    std::cout << "{400, " << ss[400] << "}\n";
-    std::cout << "{500, " << ss[500] << "}\n";
-
+    as = p.parseMathematicaString(Data::CIE_X);
+    fvs = as.toVisibleFull();
+    fvs.print();
 
     return EXIT_SUCCESS;
 }
