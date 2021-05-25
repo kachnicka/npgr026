@@ -5,6 +5,8 @@
 
 #include "SpectralData.h"
 #include "Spectrum.h"
+#include "Sampler.h"
+#include "Results.h"
 
 struct RunParams
 {
@@ -29,6 +31,29 @@ public:
     void run(const RunParams& params) const
     {
         params.print();
+
+        std::cout << "\nUniform samples (" << params.randomSampleCount << "):\n";
+        Sampler::Uniform uSampler;
+        for (auto i = 0; i < params.randomSampleCount; i++)
+            std::cout << uSampler.getSample() << "\t";
+        std::cout << "\n";
+
+
+        std::cout << "\nHero samples (" << params.randomSampleCount / 4 << "):\n";
+        Sampler::Hero hSampler;
+        for (auto i = 0; i < params.randomSampleCount / 4; i++)
+        {
+            const auto s = hSampler.getSample();
+            for(const auto& j : s)
+                std::cout << j << "\t";
+        }
+        std::cout << "\n";
+
+        std::cout << "\nEquidistant samples (" << params.equidistantSampleCount << "):\n";
+        const auto s = Sampler::Equidistant::getSample(params.equidistantSampleCount);
+        for(const auto& j : s)
+            std::cout << j << "\t";
+        std::cout << "\n";
     }
 
     void runDemo() const
@@ -112,13 +137,13 @@ int main(int argc, char **argv)
         return EXIT_SUCCESS;
     }
 
-    RunParams state;
+    RunParams params;
     if (auto o = input.getCmdOption("-n"); !o.empty())
-        state.randomSampleCount = std::stoi(o);
+        params.randomSampleCount = std::stoi(o);
     if (auto o = input.getCmdOption("-m"); !o.empty())
-        state.equidistantSampleCount = std::stoi(o);
+        params.equidistantSampleCount = std::stoi(o);
 
-    sm.run(state);
+    sm.run(params);
 
     return EXIT_SUCCESS;
 }

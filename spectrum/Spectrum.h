@@ -13,6 +13,7 @@ namespace Spectrum
         static constexpr int LAMBDA_LOW = 380;
         static constexpr int LAMBDA_HIGH = 731;
         static constexpr int LAMBDA_RANGE = LAMBDA_HIGH - LAMBDA_LOW;
+        static constexpr int LAMBDA_HERO_STEP = LAMBDA_RANGE / 4;
 
         void print() const
         {
