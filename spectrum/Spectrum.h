@@ -14,7 +14,7 @@ namespace Spectrum
         static constexpr int LAMBDA_HIGH = 731;
         static constexpr int LAMBDA_RANGE = LAMBDA_HIGH - LAMBDA_LOW;
 
-        void print()
+        void print() const
         {
             std::cout.setf(std::ios::fixed);
             std::cout.precision(4);
@@ -32,10 +32,30 @@ namespace Spectrum
             assert(idx >= LAMBDA_LOW && idx < LAMBDA_HIGH);
             return values[idx - VisibleFull::LAMBDA_LOW];
         }
+
         const float& operator[](std::size_t idx) const
         {
             assert(idx >= LAMBDA_LOW && idx < LAMBDA_HIGH);
             return values[idx - VisibleFull::LAMBDA_LOW];
+        }
+
+        VisibleFull& operator*=(float scalar)
+        {
+            for (int i = 0; i < LAMBDA_RANGE; i++)
+                values[i] *= scalar;
+            return *this;
+        }
+
+        VisibleFull& operator*=(const VisibleFull& rhs)
+        {
+            for (int i = 0; i < LAMBDA_RANGE; i++)
+                values[i] *= rhs.values[i];
+            return *this;
+        }
+
+        friend VisibleFull operator*(VisibleFull lhs, const VisibleFull& rhs)
+        {
+            return lhs *= rhs;
         }
     private:
         std::array<float, LAMBDA_RANGE> values = { };
