@@ -27,73 +27,53 @@ public:
     SpectralMultiplication()
     {
         loadSpectralData();
+        std::cout.setf(std::ios::fixed);
+        std::cout.precision(2);
+
+        Result::REFERENCE.printT("REFERENCE");
+        std::cout << "\n";
     }
 
     void run(const RunParams& params) const
     {
-        params.print();
-
-        std::cout.setf(std::ios::fixed);
-        std::cout.precision(2);
-
-        std::cout << "\nUniform samples (" << params.randomSampleCount << "):\n";
         Sampler::Uniform uSampler;
-        for (auto i = 0; i < params.randomSampleCount; i++)
-            std::cout << uSampler.getSample() << "\t";
-        std::cout << "\n";
-
-        std::cout << "\nHero samples (" << params.randomSampleCount / 4 << "):\n";
         Sampler::Hero hSampler;
-        for (auto i = 0; i < params.randomSampleCount / 4; i++)
-        {
-            const auto s = hSampler.getSample();
-            for(const auto& j : s)
-                std::cout << j << "\t";
-        }
-        std::cout << "\n";
+        Sampler::Equidistant eSampler;
+        Result uRes, hRes, eRes;
 
-        std::cout << "\nEquidistant samples (" << params.equidistantSampleCount << "):\n";
-        const auto s = Sampler::Equidistant::getSample(params.equidistantSampleCount);
-        for(const auto& j : s)
-            std::cout << j << "\t";
-        std::cout << "\n";
-
-        Result r;
-        for (const auto& [lumName, lumSpectrum] : luminary)
-            for (const auto& [matName, matSpectrum] : material)
+        for (const auto& [lumName, lumSpectrum] : luminaries)
+            for (const auto& [matName, matSpectrum] : materials)
             {
-                const auto evaluatedSpectrum = uSampler.eval(params.randomSampleCount, lumSpectrum, matSpectrum);
-                const auto key = std::make_pair(lumName, matName);
-                const auto rgb = ColorSpace::RGB(evaluatedSpectrum);
-                r.values.emplace(key, rgb);
-                std::cout << lumName << "\t" << matName << ":\t" << rgb.color.r << "\t" << rgb.color.g << "\t" << rgb.color.b << "\n";
+                uRes.values[lumName][matName] = ColorSpace::RGB(uSampler.eval(params.randomSampleCount, lumSpectrum, matSpectrum));
+                hRes.values[lumName][matName] = {};
+                eRes.values[lumName][matName] = {};
             }
-
-        std::cout << "\n";
-        for (const auto& [lumName, lumSpectrum] : luminary)
-            for (const auto& [matName, matSpectrum] : material)
-            {
-
-                const auto evaluatedSpectrum = lumSpectrum * matSpectrum;
-                const auto key = std::make_pair(lumName, matName);
-                const auto rgb = ColorSpace::RGB(evaluatedSpectrum);
-                r.values.emplace(key, rgb);
-                std::cout << lumName << "\t" << matName << ":\t" << rgb.color.r << "\t" << rgb.color.g << "\t" << rgb.color.b << "\n";
-            }
+        uRes.evalPrint("Random uniform sampling (" + std::to_string(params.randomSampleCount) + ")");
+        hRes.evalPrint("Hero wavelength sampling (" + std::to_string(params.randomSampleCount / 4) + ")");
+        eRes.evalPrint("Equidistant sampling (" + std::to_string(params.equidistantSampleCount) + ")");
     }
 
     void runDemo() const
     {
+        Result full, uniform, hero, equidistant;
+        for (const auto& [lumName, lumSpectrum] : luminaries)
+            for (const auto& [matName, matSpectrum] : materials)
+                full.values[lumName][matName] = ColorSpace::RGB(lumSpectrum * matSpectrum);
+        full.evalPrint("Full spectral evaluation");
+
+        run(RunParams{75, 8});
+        run(RunParams{125, 25});
+        run(RunParams{200, 45});
     }
 
     void printSpectralData() const
     {
-        for(const auto& [name, spectrum] : luminary)
+        for(const auto& [name, spectrum] : luminaries)
         {
             std::cout << "\n" << name;
             spectrum.print();
         }
-        for(const auto& [name, spectrum] : material)
+        for(const auto& [name, spectrum] : materials)
         {
             std::cout << "\n" << name;
             spectrum.print();
@@ -101,22 +81,22 @@ public:
     }
 
 private:
-    std::unordered_map<std::string, Spectrum::VisibleFull> luminary;
-    std::unordered_map<std::string, Spectrum::VisibleFull> material;
+    std::unordered_map<std::string, Spectrum::VisibleFull> luminaries;
+    std::unordered_map<std::string, Spectrum::VisibleFull> materials;
 
     void loadSpectralData()
     {
         Spectrum::Parser p;
         // up-sampling using linear interpolation
-        luminary["A"] = p.parseMathematicaString(Data::CIE_Illuminant_A).toVisibleFull();
-        luminary["D65"] = p.parseMathematicaString(Data::CIE_Illuminant_D65).toVisibleFull();
-        luminary["F11"] = p.parseMathematicaString(Data::CIE_Illuminant_F11).toVisibleFull();
-        material["A1"] = p.parseMathematicaString(Data::XRite_Reflectance_A1).toVisibleFull();
-        material["E2"] = p.parseMathematicaString(Data::XRite_Reflectance_E2).toVisibleFull();
-        material["F4"] = p.parseMathematicaString(Data::XRite_Reflectance_F4).toVisibleFull();
-        material["G4"] = p.parseMathematicaString(Data::XRite_Reflectance_G4).toVisibleFull();
-        material["H4"] = p.parseMathematicaString(Data::XRite_Reflectance_H4).toVisibleFull();
-        material["J4"] = p.parseMathematicaString(Data::XRite_Reflectance_J4).toVisibleFull();
+        luminaries[" A "] = p.parseMathematicaString(Data::CIE_Illuminant_A).toVisibleFull();
+        luminaries["D65"] = p.parseMathematicaString(Data::CIE_Illuminant_D65).toVisibleFull();
+        luminaries["F11"] = p.parseMathematicaString(Data::CIE_Illuminant_F11).toVisibleFull();
+        materials["A1"] = p.parseMathematicaString(Data::XRite_Reflectance_A1).toVisibleFull();
+        materials["E2"] = p.parseMathematicaString(Data::XRite_Reflectance_E2).toVisibleFull();
+        materials["F4"] = p.parseMathematicaString(Data::XRite_Reflectance_F4).toVisibleFull();
+        materials["G4"] = p.parseMathematicaString(Data::XRite_Reflectance_G4).toVisibleFull();
+        materials["H4"] = p.parseMathematicaString(Data::XRite_Reflectance_H4).toVisibleFull();
+        materials["J4"] = p.parseMathematicaString(Data::XRite_Reflectance_J4).toVisibleFull();
     }
 };
 

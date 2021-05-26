@@ -31,20 +31,20 @@ namespace Sampler
 
         [[nodiscard]] Spectrum::VisibleFull eval(int sampleCount, const Spectrum::VisibleFull& luminary, const Spectrum::VisibleFull& material)
         {
+            const auto pdf = 1.f / Spectrum::VisibleFull::LAMBDA_RANGE;
             Spectrum::VisibleFull result;
             for (auto i = 0; i < sampleCount; i++)
             {
                 const auto lambda = getSample();
 
-                // result should probably be average over multiple samples, which in this simple case equals to skipping already sampled wavelength
-                if (result[lambda] == 0.f)
-                    result[lambda] = luminary[lambda] * material[lambda];
+                result[lambda] += luminary[lambda] * material[lambda] / pdf;
             }
+            result *= 1 / static_cast<float>(sampleCount);
             return result;
         }
 
     private:
-        RandomGenerator g;
+        RandomGenerator g{1};
         std::uniform_int_distribution<int> distrib{Spectrum::VisibleFull::LAMBDA_LOW, Spectrum::VisibleFull::LAMBDA_HIGH - 1};
     };
 
