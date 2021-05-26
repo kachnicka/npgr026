@@ -1,8 +1,8 @@
 #pragma once
 
 #include <unordered_map>
+#include "ColorSpace.h"
 
-using vec3 = float;
 using Key = std::pair<std::string, std::string>;
 
 template <>
@@ -20,5 +20,5 @@ struct std::hash<Key>
 class Result
 {
 public:
-    std::unordered_map<Key, vec3> values;
+    std::unordered_map<Key, ColorSpace::RGB> values;
 };

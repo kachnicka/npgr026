@@ -33,6 +33,9 @@ public:
     {
         params.print();
 
+        std::cout.setf(std::ios::fixed);
+        std::cout.precision(2);
+
         std::cout << "\nUniform samples (" << params.randomSampleCount << "):\n";
         Sampler::Uniform uSampler;
         for (auto i = 0; i < params.randomSampleCount; i++)
@@ -60,8 +63,22 @@ public:
             for (const auto& [matName, matSpectrum] : material)
             {
                 const auto evaluatedSpectrum = uSampler.eval(params.randomSampleCount, lumSpectrum, matSpectrum);
-                const auto xyz = ColorSpace::XYZ(evaluatedSpectrum);
-                r.values[std::make_pair(lumName, matName)] = {};
+                const auto key = std::make_pair(lumName, matName);
+                const auto rgb = ColorSpace::RGB(evaluatedSpectrum);
+                r.values.emplace(key, rgb);
+                std::cout << lumName << "\t" << matName << ":\t" << rgb.color.r << "\t" << rgb.color.g << "\t" << rgb.color.b << "\n";
+            }
+
+        std::cout << "\n";
+        for (const auto& [lumName, lumSpectrum] : luminary)
+            for (const auto& [matName, matSpectrum] : material)
+            {
+
+                const auto evaluatedSpectrum = lumSpectrum * matSpectrum;
+                const auto key = std::make_pair(lumName, matName);
+                const auto rgb = ColorSpace::RGB(evaluatedSpectrum);
+                r.values.emplace(key, rgb);
+                std::cout << lumName << "\t" << matName << ":\t" << rgb.color.r << "\t" << rgb.color.g << "\t" << rgb.color.b << "\n";
             }
     }
 
