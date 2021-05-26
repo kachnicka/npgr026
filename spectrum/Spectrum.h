@@ -40,6 +40,14 @@ namespace Spectrum
             return values[idx - VisibleFull::LAMBDA_LOW];
         }
 
+        float sum() const
+        {
+            float sum = 0.f;
+            for (int i = 0; i < LAMBDA_RANGE; i++)
+                sum += values[i];
+            return sum;
+        }
+
         VisibleFull& operator*=(float scalar)
         {
             for (int i = 0; i < LAMBDA_RANGE; i++)
@@ -59,7 +67,7 @@ namespace Spectrum
             return lhs *= rhs;
         }
     private:
-        std::array<float, LAMBDA_RANGE> values = { };
+        std::array<float, LAMBDA_RANGE> values{};
     };
 
     class Arbitrary

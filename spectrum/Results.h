@@ -19,5 +19,6 @@ struct std::hash<Key>
 
 class Result
 {
-    std::unordered_map<Key, vec3> results;
+public:
+    std::unordered_map<Key, vec3> values;
 };

@@ -7,6 +7,7 @@
 #include "Spectrum.h"
 #include "Sampler.h"
 #include "Results.h"
+#include "ColorSpace.h"
 
 struct RunParams
 {
@@ -38,7 +39,6 @@ public:
             std::cout << uSampler.getSample() << "\t";
         std::cout << "\n";
 
-
         std::cout << "\nHero samples (" << params.randomSampleCount / 4 << "):\n";
         Sampler::Hero hSampler;
         for (auto i = 0; i < params.randomSampleCount / 4; i++)
@@ -54,6 +54,15 @@ public:
         for(const auto& j : s)
             std::cout << j << "\t";
         std::cout << "\n";
+
+        Result r;
+        for (const auto& [lumName, lumSpectrum] : luminary)
+            for (const auto& [matName, matSpectrum] : material)
+            {
+                const auto evaluatedSpectrum = uSampler.eval(params.randomSampleCount, lumSpectrum, matSpectrum);
+                const auto xyz = ColorSpace::XYZ(evaluatedSpectrum);
+                r.values[std::make_pair(lumName, matName)] = {};
+            }
     }
 
     void runDemo() const
