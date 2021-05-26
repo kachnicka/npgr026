@@ -60,8 +60,22 @@ namespace Sampler
                      s + 2*Spectrum::VisibleFull::LAMBDA_HERO_STEP,
                      s + 3*Spectrum::VisibleFull::LAMBDA_HERO_STEP};
         }
+
+        [[nodiscard]] Spectrum::VisibleFull eval(int sampleCount, const Spectrum::VisibleFull& luminary, const Spectrum::VisibleFull& material)
+        {
+            const auto pdf = 1.f / Spectrum::VisibleFull::LAMBDA_HERO_STEP;
+            Spectrum::VisibleFull result;
+            for (auto i = 0; i < sampleCount; i++)
+            {
+                const auto lambdas = getSample();
+                for (auto lambda : lambdas)
+                    result[lambda] += luminary[lambda] * material[lambda] / pdf;
+            }
+            result *= 1 / static_cast<float>(sampleCount);
+            return result;
+        }
     private:
-        RandomGenerator g;
+        RandomGenerator g{1};
         // slightly distorted sampling due to defined visible wavelength range not being divisible by 4 - lambda 729 and 730 is never sampled
         std::uniform_int_distribution<int> distrib{Spectrum::VisibleFull::LAMBDA_LOW, Spectrum::VisibleFull::LAMBDA_LOW + Spectrum::VisibleFull::LAMBDA_HERO_STEP};
     };
@@ -80,6 +94,18 @@ namespace Sampler
             assert(samples.size() == sampleCount);
             return samples;
         }
-    };
 
+        [[nodiscard]] static Spectrum::VisibleFull eval(int sampleCount, const Spectrum::VisibleFull& luminary, const Spectrum::VisibleFull& material)
+        {
+            const auto pdf = 1.f / Spectrum::VisibleFull::LAMBDA_RANGE;
+            Spectrum::VisibleFull result;
+
+            const auto lambdas = getSample(sampleCount);
+            for (auto lambda : lambdas)
+                result[lambda] += luminary[lambda] * material[lambda] / pdf;
+
+            result *= 1 / static_cast<float>(sampleCount);
+            return result;
+        }
+    };
 }

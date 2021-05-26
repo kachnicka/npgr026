@@ -38,15 +38,14 @@ public:
     {
         Sampler::Uniform uSampler;
         Sampler::Hero hSampler;
-        Sampler::Equidistant eSampler;
         Result uRes, hRes, eRes;
 
         for (const auto& [lumName, lumSpectrum] : luminaries)
             for (const auto& [matName, matSpectrum] : materials)
             {
                 uRes.values[lumName][matName] = ColorSpace::RGB(uSampler.eval(params.randomSampleCount, lumSpectrum, matSpectrum));
-                hRes.values[lumName][matName] = {};
-                eRes.values[lumName][matName] = {};
+                hRes.values[lumName][matName] = ColorSpace::RGB(hSampler.eval(params.randomSampleCount, lumSpectrum, matSpectrum));
+                eRes.values[lumName][matName] = ColorSpace::RGB(Sampler::Equidistant::eval(params.equidistantSampleCount, lumSpectrum, matSpectrum));
             }
         uRes.evalPrint("Random uniform sampling (" + std::to_string(params.randomSampleCount) + ")");
         hRes.evalPrint("Hero wavelength sampling (" + std::to_string(params.randomSampleCount / 4) + ")");
@@ -129,7 +128,7 @@ private:
 int main(int argc, char **argv)
 {
     InputParser input(argc, argv);
-    if (input.cmdOptionExists("-h") || input.cmdOptionExists("--help"))
+    if (argc == 1 || input.cmdOptionExists("-h") || input.cmdOptionExists("--help"))
     {
         std::cout << "spectrum [-n RANDOM_SAMPLE_COUNT] [-m EQUIDISTANT_SAMPLE_COUNT]\n";
         std::cout << "spectrum --demo\n";
