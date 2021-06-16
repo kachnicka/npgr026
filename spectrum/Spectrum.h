@@ -3,6 +3,7 @@
 #define DEBUG_LOG 0
 #include <cassert>
 #include <map>
+#include <array>
 #include <iostream>
 
 namespace Spectrum
