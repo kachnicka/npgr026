@@ -5,7 +5,6 @@
 
 namespace Scene
 {
-    using Light = glm::vec4;
     using StokesVector = glm::vec4;
 
     struct Interface
@@ -33,7 +32,7 @@ namespace Scene
 
     class Scene
     {
-        static Light unpolarized;
+        static StokesVector unpolarizedLight;
         short id = 0;
         Interface x1, x2;
         float rho = 0.0f;
@@ -41,20 +40,33 @@ namespace Scene
         std::unique_ptr<glm::mat4> filter;
 
     public:
-        Result traverse() const
+        [[nodiscard]] Result traverse() const
         {
             Result r{id, {}};
 
-            r.sv = unpolarized;
+            const auto mmX1 = MuellerMatrix::FresnelReflectance(FresnelGeneral(cos(x1.theta * DEG_TO_RAD), x1.eta, x1.etaK));
+            auto mmX2 = MuellerMatrix::FresnelReflectance(FresnelGeneral(cos(x2.theta * DEG_TO_RAD), x2.eta, x2.etaK));
+            auto mmF = filter ? *filter : glm::mat4(1.0f);
+
+            if (rho > 0.0f)
+            {
+                mmX2 = MuellerMatrix::Rotate(mmX2, rho * DEG_TO_RAD);
+                mmF = MuellerMatrix::Rotate(mmF, rho * DEG_TO_RAD);
+            }
+
+            // matrix multiplication in glm is done from right to left
+            const auto mm = mmX1 * mmX2 * mmF;
+            r.sv =  mm * unpolarizedLight;
 
             return r;
         }
 
         static void printHeader()
         {
-            std::cout << "Light: " << glm::to_string(unpolarized) << "\n";
+            std::cout << "Light: " << glm::to_string(unpolarizedLight) << "\n";
             std::cout << "id\tn1\tk1\tn2\tk2\tdelta\trho\tphi\tfilter\n";
         }
+
         void print() const
         {
             std::cout << id << '\t' << x1.eta << '\t' << x1.etaK << '\t' << x2.eta << '\t' << x2.etaK << '\t' << x1.theta << '\t' << rho << '\t' << x2.theta << '\t';
@@ -64,27 +76,34 @@ namespace Scene
                 std::cout << "---" << "\n";
         }
 
-        Scene(const short id, const Interface x1, const Interface x2, const bool insertFilter = false, const float filterRot = 0.0f) :
-            id(id), x1(x1), x2(x2), filterRot(filterRot)
+        Scene(const short id, const Interface x1, const Interface x2, const bool insertFilter = false, const float filterRot = 0.0f, const float rho = 0.0f) :
+            id(id), x1(x1), x2(x2), rho(rho), filterRot(filterRot)
         {
             if (insertFilter)
                 filter = std::make_unique<glm::mat4>(MuellerMatrix::LinearFilter(filterRot * DEG_TO_RAD));
         }
     };
-    Light Scene::unpolarized = { 100.0f, 0.0f, 0.0f, 0.0f };
+    StokesVector Scene::unpolarizedLight = { 100.0f, 0.0f, 0.0f, 0.0f };
 
 }
 
 int main(int argc, char **argv)
 {
     std::cout.setf(std::ios::fixed);
-    std::cout.precision(2);
+    std::cout.precision(3);
+    const auto etaInGlass = 1.0f / 1.5105f;
 
     std::vector<Scene::Scene> testScenes;
     testScenes.reserve(9);
     testScenes.emplace_back(Scene::Scene{ 1, { 53.0f, 1.33f, 0.0f }, { 56.0f, 1.5f, 0.0f } });
     testScenes.emplace_back(Scene::Scene{ 2, { 53.0f, 1.33f, 0.0f }, { 56.0f, 1.5f, 0.0f } , true });
     testScenes.emplace_back(Scene::Scene{ 3, { 53.0f, 1.33f, 0.0f }, { 56.0f, 1.5f, 0.0f } , true, 90.0f });
+    testScenes.emplace_back(Scene::Scene{ 4, { 48.0f, etaInGlass, 0.0f }, { 54.6f, etaInGlass, 0.0f } , true, 0.0f });
+    testScenes.emplace_back(Scene::Scene{ 5, { 48.0f, etaInGlass, 0.0f }, { 54.6f, etaInGlass, 0.0f } , true, 90.0f });
+    testScenes.emplace_back(Scene::Scene{ 6, { 48.0f, etaInGlass, 0.0f }, { 54.6f, etaInGlass, 0.0f } , true, 45.0f });
+    testScenes.emplace_back(Scene::Scene{ 7, { 48.0f, 1.12f, 2.16f }, { 20.0f, 0.608f, 2.12f } , false, 0.0f, 34.0f });
+    testScenes.emplace_back(Scene::Scene{ 8, { 48.0f, 1.12f, 2.16f }, { 20.0f, 0.608f, 2.12f } , true, 0.0f, 34.0f });
+    testScenes.emplace_back(Scene::Scene{ 9, { 48.0f, 1.12f, 2.16f }, { 20.0f, 0.608f, 2.12f } , true, 90.0f, 34.0f });
 
     std::vector<Scene::Result> results;
     results.reserve(testScenes.size());
@@ -100,27 +119,6 @@ int main(int argc, char **argv)
     Scene::Result::printHeader();
     for (const auto& r : results)
         r.print();
-
-    //Ray unpolarized;
-    //unpolarized.sv = { 100.0f, 0.0f, 0.0f, 0.0f };
-    //Ray horizontallyPolarized;
-    //horizontallyPolarized.sv = { 100.0f, 100.0f, 0.0f, 0.0f };
-    //Ray verticallyPolarized;
-    //verticallyPolarized.sv = { 100.0f, -100.0f, 0.0f, 0.0f };
-
-    //const Interaction noAttenuation(unpolarized, MuellerMatrix::PlainAttenuation(1));
-    //const Interaction halfAttenuation(unpolarized, MuellerMatrix::PlainAttenuation(0.5));
-
-    //{
-    //    const Interaction filtered0(unpolarized, MuellerMatrix::LinearFilter(0));
-    //    const Interaction filtered1(unpolarized, MuellerMatrix::LinearFilter(0.5f * M_PI));
-    //}
-
-    //{
-    //    const Interaction filtered0(horizontallyPolarized, MuellerMatrix::LinearFilter(0));
-    //    const Interaction filtered1(horizontallyPolarized, MuellerMatrix::LinearFilter(0.5f * M_PI));
-    //}
-
 
     return EXIT_SUCCESS;
 }
