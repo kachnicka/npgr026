@@ -10,3 +10,4 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(glm)
 
 add_subdirectory(spectrum)
+add_subdirectory(polarization)
