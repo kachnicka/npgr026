@@ -3,7 +3,9 @@
 #include <glm/mat4x4.hpp>
 #include <glm/gtx/string_cast.hpp>
 
+#ifndef M_PI
 constexpr float M_PI = 3.14159265358979323846f;
+#endif
 constexpr float DEG_TO_RAD = 0.017453293f;
 constexpr float RAD_TO_DEG = 57.29577951f;
 
@@ -27,8 +29,8 @@ public:
         const auto t0 = etaSqr - etaKSqr - sinThetaSqr;
         const auto t1 = sqrt(t0 * t0 + 4 * etaSqr * etaKSqr);
 
-        const auto aSqr = (t1 + t0) * 0.5f;
-        const auto bSqr = (t1 - t0) * 0.5f;
+        const auto aSqr = std::max(0.0, (t1 + t0) * 0.5f);
+        const auto bSqr = std::max(0.0, (t1 - t0) * 0.5f);
         const auto a = sqrt(aSqr);
         const auto b = sqrt(bSqr);
 
