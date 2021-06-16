@@ -29,8 +29,8 @@ public:
         const auto t0 = etaSqr - etaKSqr - sinThetaSqr;
         const auto t1 = sqrt(t0 * t0 + 4 * etaSqr * etaKSqr);
 
-        const auto aSqr = std::max(0.0, (t1 + t0) * 0.5f);
-        const auto bSqr = std::max(0.0, (t1 - t0) * 0.5f);
+        const auto aSqr = std::max(0.0f, static_cast<float>((t1 + t0) * 0.5f));
+        const auto bSqr = std::max(0.0f, static_cast<float>((t1 - t0) * 0.5f));
         const auto a = sqrt(aSqr);
         const auto b = sqrt(bSqr);
 
