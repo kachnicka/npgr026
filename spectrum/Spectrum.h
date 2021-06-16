@@ -41,7 +41,7 @@ namespace Spectrum
             return values[idx - VisibleFull::LAMBDA_LOW];
         }
 
-        float sum() const
+        [[nodiscard]] float sum() const
         {
             float sum = 0.f;
             for (int i = 0; i < LAMBDA_RANGE; i++)
@@ -84,12 +84,12 @@ namespace Spectrum
             return spectrum;
         }
     private:
-        [[nodiscard]] float lerpVal(int lambda) const
+        [[nodiscard]] float lerpVal(const int lambda) const
         {
-            if (auto val = values.find(lambda); val != values.end())
+            if (const auto val = values.find(lambda); val != values.end())
                 return val->second;
 
-            auto B = values.lower_bound(lambda);
+            const auto B = values.lower_bound(lambda);
             assert(B != values.end() && B != values.begin());
             const auto [B_lambda, B_value] = *B;
 

@@ -110,8 +110,7 @@ public:
 
     [[nodiscard]] const std::string& getCmdOption(const std::string& option) const
     {
-        auto itr =  std::find(tokens.cbegin(), tokens.cend(), option);
-        if (itr != tokens.cend() && ++itr != tokens.end())
+        if (auto itr =  std::find(tokens.cbegin(), tokens.cend(), option);itr != tokens.cend() && ++itr != tokens.end())
             return *itr;
         return emptyString;
     }
@@ -127,7 +126,7 @@ private:
 
 int main(int argc, char **argv)
 {
-    InputParser input(argc, argv);
+    const InputParser input(argc, argv);
     if (argc == 1 || input.cmdOptionExists("-h") || input.cmdOptionExists("--help"))
     {
         std::cout << "spectrum [-n RANDOM_SAMPLE_COUNT] [-m EQUIDISTANT_SAMPLE_COUNT]\n";
@@ -135,7 +134,7 @@ int main(int argc, char **argv)
         return EXIT_SUCCESS;
     }
 
-    SpectralMultiplication sm;
+    const SpectralMultiplication sm;
     if (argc == 2 && input.cmdOptionExists("--demo"))
     {
         sm.runDemo();
@@ -143,9 +142,9 @@ int main(int argc, char **argv)
     }
 
     RunParams params;
-    if (auto o = input.getCmdOption("-n"); !o.empty())
+    if (const auto o = input.getCmdOption("-n"); !o.empty())
         params.randomSampleCount = std::stoi(o);
-    if (auto o = input.getCmdOption("-m"); !o.empty())
+    if (const auto o = input.getCmdOption("-m"); !o.empty())
         params.equidistantSampleCount = std::stoi(o);
 
     sm.run(params);

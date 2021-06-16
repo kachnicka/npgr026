@@ -54,7 +54,7 @@ namespace Sampler
     public:
         ivec4 getSample()
         {
-            auto s = distrib(g.gen);
+            const auto s = distrib(g.gen);
             return { s + 0*Spectrum::VisibleFull::LAMBDA_HERO_STEP,
                      s + 1*Spectrum::VisibleFull::LAMBDA_HERO_STEP,
                      s + 2*Spectrum::VisibleFull::LAMBDA_HERO_STEP,
