@@ -1,6 +1,6 @@
 set(Polarization_files
     main.cpp
-    Polarization.h)
+    Polarization.h Scene.h)
 
 add_executable(polarization ${Polarization_files})
 

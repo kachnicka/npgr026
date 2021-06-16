@@ -1,7 +1,6 @@
 #pragma once
 #include <cmath>
 #include <glm/mat4x4.hpp>
-#include <glm/vec4.hpp>
 #include <glm/gtx/string_cast.hpp>
 
 constexpr float M_PI = 3.14159265358979323846f;
@@ -45,52 +44,6 @@ public:
         r_p = (t4 - t5) / (t4 + t5) * r_s;
         delta_s = atan2(2 * b * cosTheta , (cosThetaSqr - t1));
         delta_p = atan2(2  * cosTheta * ((etaSqr - etaKSqr) * b - 2 * eta * etaK * a) , ((etaSqr + etaKSqr) * (etaSqr + etaKSqr) * cosThetaSqr - t1));
-    }
-};
-
-struct Ray
-{
-    glm::vec4 sv = {};
-};
-
-class StokesVector
-{
-    glm::vec4 sv = {};
-};
-
-struct MMAttenuationInterface
-{
-    glm::mat4 mm = {};
-
-    [[nodiscard]] Ray interact(const Ray& iRay) const
-    {
-        Ray oRay;
-        oRay.sv = mm * iRay.sv;
-        return oRay;
-    }
-};
-
-struct Interaction
-{
-    Ray iRay;
-    MMAttenuationInterface i;
-    Ray oRay;
-    Interaction(Ray iRay, glm::mat4 mm) : iRay(iRay), i({ mm }), oRay({ i.mm * iRay.sv})
-    {
-        print();
-
-        auto ke0 = i.mm * iRay.sv;
-        auto ke1 = iRay.sv * i.mm;
-    }
-    void print() const
-    {
-        std::cout << "Interaction:" << ":\n";
-        std::cout << "iRay:\n";
-        std::cout << glm::to_string(iRay.sv) << ">\n";
-        std::cout << "Mueller matrix:\n";
-        std::cout << glm::to_string(i.mm) << ">\n";
-        std::cout << "oRay:\n"; 
-        std::cout << glm::to_string(oRay.sv) << ">\n\n";
     }
 };
 
