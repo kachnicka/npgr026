@@ -3,19 +3,35 @@
 
 namespace Scene
 {
-    using StokesVector = glm::vec4;
+    using StokesVec = glm::vec4;
+    using MuellerMat = glm::mat4;
 
-    struct Interface
+    struct FresnelSurface
     {
         float theta = 0.0f;
         float eta = 1.0f;
         float etaK = 0.0f;
+
+        [[nodiscard]] MuellerMat getMuellerMatrix() const
+        {
+            return MuellerMatrix::FresnelReflectance(FresnelGeneral(cos(theta * DEG_TO_RAD), eta, etaK));
+        }
+    };
+
+    struct LinearFilter
+    {
+        float filterRot = 0.0f;
+
+        [[nodiscard]] MuellerMat getMuellerMatrix() const
+        {
+            return MuellerMatrix::LinearFilter(filterRot * DEG_TO_RAD);
+        }
     };
 
     struct Result
     {
         short id = 0;
-        StokesVector sv = {};
+        StokesVec sv = {};
 
         static void printHeader()
         {
@@ -28,32 +44,46 @@ namespace Scene
         }
     };
 
+    class RayState
+    {
+        MuellerMat m{1.0f};
+        float frameRotation = 0.0f;
+    public:
+        void addInterfaceInteraction(MuellerMat mm, float interfaceRot = 0.0f)
+        {
+            frameRotation += interfaceRot * DEG_TO_RAD;
+            if (frameRotation != 0.0f)
+                mm = MuellerMatrix::Rotate(mm, frameRotation);
+            m = m * mm;
+        }
+
+        [[nodiscard]] StokesVec lightInteraction(const StokesVec& light) const
+        {
+            return m * light;
+        }
+    };
+
     class Scene
     {
-        static StokesVector unpolarizedLight;
+        static StokesVec unpolarizedLight;
+
         short id = 0;
-        Interface x1, x2;
+        FresnelSurface x1, x2;
         float rho = 0.0f;
-        float filterRot = 0.0f;
-        std::unique_ptr<glm::mat4> filter;
+        std::unique_ptr<LinearFilter> filter;
 
     public:
         [[nodiscard]] Result traverse() const
         {
-            const auto mmX1 = MuellerMatrix::FresnelReflectance(FresnelGeneral(cos(x1.theta * DEG_TO_RAD), x1.eta, x1.etaK));
-            auto mmX2 = MuellerMatrix::FresnelReflectance(FresnelGeneral(cos(x2.theta * DEG_TO_RAD), x2.eta, x2.etaK));
-            auto mmF = filter ? *filter : glm::mat4(1.0f);
+            RayState compoundMM;
 
-            if (rho > 0.0f)
-            {
-                mmX2 = MuellerMatrix::Rotate(mmX2, rho * DEG_TO_RAD);
-                mmF = MuellerMatrix::Rotate(mmF, rho * DEG_TO_RAD);
-            }
+            // emulation of light path from camera to source
+            compoundMM.addInterfaceInteraction(x1.getMuellerMatrix());
+            compoundMM.addInterfaceInteraction(x2.getMuellerMatrix(), rho);
+            if (filter)
+                compoundMM.addInterfaceInteraction(filter->getMuellerMatrix());
 
-            // matrix multiplication in glm is done from right to left
-            const auto mm = mmX1 * mmX2 * mmF;
-
-            return { id, mm * unpolarizedLight };
+            return { id, compoundMM.lightInteraction(unpolarizedLight) };
         }
 
         static void printHeader()
@@ -66,18 +96,18 @@ namespace Scene
         {
             std::cout << id << '\t' << x1.eta << '\t' << x1.etaK << '\t' << x2.eta << '\t' << x2.etaK << '\t' << x1.theta << '\t' << rho << '\t' << x2.theta << '\t';
             if (filter)
-                std::cout << filterRot << "\n";
+                std::cout << filter->filterRot << "\n";
             else
                 std::cout << "---" << "\n";
         }
 
-        Scene(const short id, const Interface x1, const Interface x2, const bool insertFilter = false, const float filterRot = 0.0f, const float rho = 0.0f) :
-            id(id), x1(x1), x2(x2), rho(rho), filterRot(filterRot)
+        Scene(const short id, const FresnelSurface x1, const FresnelSurface x2, const bool insertFilter = false, const float filterRot = 0.0f, const float rho = 0.0f) :
+            id(id), x1(x1), x2(x2), rho(rho)
         {
             if (insertFilter)
-                filter = std::make_unique<glm::mat4>(MuellerMatrix::LinearFilter(filterRot * DEG_TO_RAD));
+                filter = std::make_unique<LinearFilter>(LinearFilter{filterRot});
         }
     };
-    StokesVector Scene::unpolarizedLight = { 100.0f, 0.0f, 0.0f, 0.0f };
+    StokesVec Scene::unpolarizedLight = { 100.0f, 0.0f, 0.0f, 0.0f };
 }
 
